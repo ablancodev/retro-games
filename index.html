@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Retro Arcade Simulator</title>
+    <style>
+        :root {
+            --primary: #ff0066;
+            --secondary: #00ff66;
+            --background: #1a1a1a;
+            --text: #ffffff;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--background);
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .arcade-cabinet {
+            background: linear-gradient(45deg, #2a2a2a, #000000);
+            border: 4px solid var(--primary);
+            border-radius: 10px;
+            margin: 20px auto;
+            padding: 20px;
+            max-width: 800px;
+            box-shadow: 0 0 20px rgba(255, 0, 102, 0.3);
+        }
+
+        .screen {
+            background: rgba(0, 0, 0, 0.8);
+            border: 3px solid var(--secondary);
+            border-radius: 5px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            text-align: center;
+            color: var(--primary);
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px rgba(255, 0, 102, 0.5);
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .game-card {
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--secondary);
+            border-radius: 8px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 0 15px var(--secondary);
+        }
+
+        .game-preview {
+            width: 100%;
+            height: 120px;
+            background: #333;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .game-title {
+            color: var(--primary);
+            margin: 10px 0;
+            font-size: 1.2em;
+            text-align: center;
+        }
+
+        .game-description {
+            font-size: 0.9em;
+            color: #ccc;
+            margin-bottom: 10px;
+        }
+
+        .controls {
+            text-align: center;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: var(--secondary);
+            transform: scale(1.05);
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                text-shadow: 0 0 10px var(--primary);
+            }
+            50% {
+                text-shadow: 0 0 20px var(--primary), 0 0 30px var(--primary);
+            }
+        }
+
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                rgba(255,255,255,0) 0%,
+                rgba(255,255,255,0.1) 10%,
+                rgba(255,255,255,0) 100%
+            );
+            pointer-events: none;
+            animation: scan 8s linear infinite;
+        }
+
+        @keyframes scan {
+            0% {
+                transform: translateY(-100%);
+            }
+            100% {
+                transform: translateY(100%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="scanline"></div>
+    <div class="arcade-cabinet">
+        <div class="screen">
+            <h1>Retro Arcade</h1>
+            <div class="games-grid" id="gamesGrid">
+                <!-- Games will be inserted here by JavaScript -->
+            </div>
+        </div>
+        <div class="controls">
+            <button class="btn" onclick="prevPage()">← Anterior</button>
+            <button class="btn" onclick="nextPage()">Siguiente →</button>
+        </div>
+    </div>
+
+    <script>
+        const games = [
+        /*
+            {
+                title: "Space Invaders",
+                description: "Defiende la Tierra de una invasión alienígena en este clásico shooter espacial.",
+                preview: "👾",
+                folder: "/games/space-invaders"
+            },
+            {
+                title: "Pac-Man",
+                description: "Come todos los puntos mientras evitas a los fantasmas en este laberinto infinito.",
+                preview: "🟡",
+                folder: "/games/pacman"
+            },
+            {
+                title: "Snake",
+                description: "Guía a la serpiente para que coma y crezca, pero cuidado con chocar.",
+                preview: "🐍",
+                folder: "/games/snake"
+            },
+        */
+            {
+                title: "Tetris",
+                description: "Organiza los bloques que caen para completar líneas en este puzzle adictivo.",
+                preview: "🟦",
+                folder: "/tetris"
+            },
+        /*
+            {
+                title: "Pong",
+                description: "El clásico juego de tenis de mesa que inició la revolución de los videojuegos.",
+                preview: "🏓",
+                folder: "/games/pong"
+            },
+            {
+                title: "Frogger",
+                description: "Ayuda a la rana a cruzar la carretera y el río sin accidentes.",
+                preview: "🐸",
+                folder: "/games/frogger"
+            }
+        */
+        ];
+
+        let currentPage = 0;
+        const gamesPerPage = 4;
+
+        function createGameCard(game) {
+            // current folder + folder
+            var url = window.location.href;
+            url = url.substring(0, url.lastIndexOf("/")) + game.folder;
+            return `
+                <div class="game-card" onclick="window.location.href='${url}'">
+                    <div class="game-preview">
+                        <span style="font-size: 3em;">${game.preview}</span>
+                    </div>
+                    <h3 class="game-title">${game.title}</h3>
+                    <p class="game-description">${game.description}</p>
+                </div>
+            `;
+        }
+
+        function displayGames() {
+            const startIndex = currentPage * gamesPerPage;
+            const endIndex = startIndex + gamesPerPage;
+            const gamesGrid = document.getElementById('gamesGrid');
+            
+            gamesGrid.innerHTML = games
+                .slice(startIndex, endIndex)
+                .map(createGameCard)
+                .join('');
+        }
+
+        function nextPage() {
+            if ((currentPage + 1) * gamesPerPage < games.length) {
+                currentPage++;
+                displayGames();
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 0) {
+                currentPage--;
+                displayGames();
+            }
+        }
+
+        function loadGame(folder) {
+            // Aquí se implementaría la lógica para cargar el juego
+            console.log(`Cargando juego desde: ${folder}`);
+            //alert(`¡Cargando ${folder}! Esta es una demo, aquí se cargaría el juego real.`);
+            
+        }
+
+        // Inicializar la visualización
+        displayGames();
+
+        // Añadir efectos de sonido retro
+        const buttons = document.querySelectorAll('.btn');
+        buttons.forEach(button => {
+            button.addEventListener('mouseenter', () => {
+                playBeep(800, 50);
+            });
+            button.addEventListener('click', () => {
+                playBeep(1000, 100);
+            });
+        });
+
+        function playBeep(frequency, duration) {
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = 'square';
+            
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            
+            oscillator.start();
+            setTimeout(() => {
+                oscillator.stop();
+            }, duration);
+        }
+    </script>
+</body>
+</html>
